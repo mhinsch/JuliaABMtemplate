@@ -64,7 +64,7 @@ macro processes(sim, agent_decl, decl)
 
 	# general bits of the function body
 	pois_func = :(function $(esc(pois_func_name))($(esc(agent_decl)), $(esc(:sim)))
-		rates = fill(0.0, $(length(pois)))
+			rates = fill(0.0, $(length(pois)))
 		end)
 	
 	pois_func_body = pois_func.args[2].args
@@ -85,19 +85,22 @@ macro processes(sim, agent_decl, decl)
 
 		# condition check
 		check = :(if $(esc(cond))
-				rates[$i] = $rate
+				rates[$i] = $(esc(rate))
 			end)
 		push!(pois_func_body, check)
 
 		# check if selected, execute
 		ai = :(
 			if rnd < rates[$i]
+#				println("@ ", w_time, " -> ", $(string(action)))
+
 				$(esc(:schedule_in!))(w_time, $(esc(:scheduler))($(esc(sim)))) do
 					self = $(esc(action))
-					if self != nothing
+					if self != $(esc(:nothing))
 						$(esc(pois_func_name))(self, $sim)
 					end
 				end
+
 				return
 			end;
 
@@ -111,7 +114,8 @@ macro processes(sim, agent_decl, decl)
 
 	# bits between conditions and selection
 	push!(pois_func_body, :(rate = $(esc(:sum))(rates);
-		w_time = rand(Exponential(rate));
+#		println("@@ ", rate);
+		w_time = rand(Exponential(1.0/rate));
 		rnd = rand() * rate
 		))
 

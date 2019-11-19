@@ -18,6 +18,7 @@ Base.isempty(scheduler::PQScheduler{TIME}) where {TIME} = isempty(scheduler.queu
 "add a single item"
 function schedule!(todo, at, scheduler)
 	scheduler.queue[todo] = at
+#	println("<- ", at)
 end
 
 
@@ -33,20 +34,36 @@ end
 
 
 "run the next action"
-function next!(scheduler)
+function once!(scheduler)
+#	println("! ", scheduler.now)
+
 	if isempty(scheduler)
 		return
 	end
 
-	f = dequeue!(scheduler.queue)
-	f()
+	a, t = peek(scheduler.queue)
+
+	scheduler.now = t
+	dequeue!(scheduler.queue)()
 end
+
 
 "run actions up to `time`"
 function upto!(scheduler, time)
-	while !isempty(scheduler) && time_next(scheduler) > time
-		next!(scheduler)
+#	println("! ", scheduler.now, " ... ", time)
+
+	while !isempty(scheduler)
+		a, t = peek(scheduler.queue)
+		if t > time
+			break
+		end
+
+		scheduler.now = t
+		dequeue!(scheduler.queue)()
 	end
+
+	scheduler.now = time
+
 	scheduler
 end
 
