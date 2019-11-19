@@ -1,23 +1,34 @@
 module Scheduler
 
-export PQScheduler, isempty, schedule!, time_now, time_next, schedule_in!, next!, upto!
+export PQScheduler, isempty, schedule!, time_now, time_next, schedule_in!, next!, upto!, unschedule!
 
 
 using DataStructures
 
+struct Item{OBJ, FUN}
+	obj :: OBJ
+	fun :: FUN
+end
+
+exec(it :: Item{OBJ, FUN}) where {OBJ, FUN} = it.fun(obj)
+
+
 mutable struct PQScheduler{TIME}
-	queue :: PriorityQueue{Function, TIME}
+	queue :: PriorityQueue{Any, TIME}
+	actions :: Dict{Any, Function}
 	now :: TIME
 end
 
-PQScheduler{TIME}() where {TIME} = PQScheduler{TIME}(PriorityQueue{Function, TIME}(), TIME(0))
+PQScheduler{TIME}() where {TIME} = PQScheduler{TIME}(
+	PriorityQueue{Any, TIME}(), Dict{Any, Function}(), TIME(0))
 
 
 Base.isempty(scheduler::PQScheduler{TIME}) where {TIME} = isempty(scheduler.queue)
 
 "add a single item"
-function schedule!(todo, at, scheduler)
-	scheduler.queue[todo] = at
+function schedule!(fun, obj, at, scheduler)
+	scheduler.queue[obj] = at
+	scheduler.actions[obj] = fun
 #	println("<- ", at)
 end
 
@@ -27,9 +38,9 @@ time_next(scheduler) = isempty(scheduler) ? scheduler.now : peek(scheduler.queue
 
 
 "add a single item at `wait` time from now"
-function schedule_in!(todo, wait, scheduler)
+function schedule_in!(fun, obj, wait, scheduler)
 	t = time_now(scheduler) + wait
-	schedule!(todo, t, scheduler)
+	schedule!(fun, obj, t, scheduler)
 end
 
 
@@ -41,31 +52,42 @@ function once!(scheduler)
 		return
 	end
 
-	a, t = peek(scheduler.queue)
+	obj, time = peek(scheduler.queue)
 
-	scheduler.now = t
-	dequeue!(scheduler.queue)()
+	scheduler.now = time
+	dequeue!(scheduler.queue)
+	fun = scheduler.actions[obj]
+	delete!(scheduler.actions, obj)
+	fun(obj)
 end
 
-
+# we could implement this using repeated calls to once but that
+# would require redundant calls to peek
 "run actions up to `time`"
-function upto!(scheduler, time)
+function upto!(scheduler, atime)
 #	println("! ", scheduler.now, " ... ", time)
 
 	while !isempty(scheduler)
-		a, t = peek(scheduler.queue)
-		if t > time
+		obj, time = peek(scheduler.queue)
+
+		if time > atime
+			scheduler.now = atime
 			break
 		end
 
-		scheduler.now = t
-		dequeue!(scheduler.queue)()
+		scheduler.now = time
+		dequeue!(scheduler.queue)
+		fun = scheduler.actions[obj]
+		delete!(scheduler.actions, obj)
+		fun(obj)
 	end
-
-	scheduler.now = time
 
 	scheduler
 end
 
+function unschedule!(scheduler, obj::Any)
+	delete!(scheduler.queue, obj)
+	delete!(scheduler.actions, obj)
+end
 
 end

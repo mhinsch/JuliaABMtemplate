@@ -24,6 +24,7 @@ macro processes(sim, agent_decl, decl)
 		error("processes expects a declaration block as 3rd argument")
 	end
 
+	agent_name = agent_decl.args[1]
 	agent_type = agent_decl.args[2]
 
 	pois = []
@@ -60,7 +61,7 @@ macro processes(sim, agent_decl, decl)
 
 	# name functions by type so that objects of different type
 	# can be used in parallel
-	pois_func_name = Symbol("process_pois_" * String(agent_type))
+	pois_func_name = :process_poisson
 
 	# general bits of the function body
 	pois_func = :(function $(esc(pois_func_name))($(esc(agent_decl)), $(esc(:sim)))
@@ -94,10 +95,14 @@ macro processes(sim, agent_decl, decl)
 			if rnd < rates[$i]
 #				println("@ ", w_time, " -> ", $(string(action)))
 
-				$(esc(:schedule_in!))(w_time, $(esc(:scheduler))($(esc(sim)))) do
-					self = $(esc(action))
-					if self != $(esc(:nothing))
-						$(esc(pois_func_name))(self, $sim)
+				$(esc(:schedule_in!))($(esc(agent_name)), w_time, $(esc(:scheduler))($(esc(sim)))) do $(esc(agent_name))
+					active = $(esc(action))
+
+					for obj in active 
+						# should not be needed as queue as well as actions are unique in 
+						# agents
+						# $(esc(:unschedule!))($(esc(:scheduler))($(esc(sim))), obj)
+						$(esc(pois_func_name))(obj, $sim)
 					end
 				end
 
@@ -115,7 +120,10 @@ macro processes(sim, agent_decl, decl)
 	# bits between conditions and selection
 	push!(pois_func_body, :(rate = $(esc(:sum))(rates);
 #		println("@@ ", rate);
-		w_time = rand(Exponential(1.0/rate));
+#		w_time = rand(Exponential(1.0/rate));
+# copy ML3
+#		w_time = max(1e-5, log(1.0/rand())/rate);
+		w_time = log(rand())/-rate;
 		rnd = rand() * rate
 		))
 
