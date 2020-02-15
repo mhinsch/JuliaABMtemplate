@@ -17,11 +17,11 @@ using Distributions
 macro processes(model_name, sim, agent_decl, decl)
 	# some superficial sanity checks
 	if ! isexpr(agent_decl, Symbol("::"))
-		error("processes expects an agent declaration as 3nd argument")
+		error("@processes expects an agent declaration as 3rd argument")
 	end
 
 	if typeof(decl) != Expr || decl.head != :block
-		error("processes expects a declaration block as 4rd argument")
+		error("@processes expects a declaration block as 4th argument")
 	end
 
 	agent_name = agent_decl.args[1]
