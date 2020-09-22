@@ -65,7 +65,7 @@ macro processes(model_name, sim, agent_decl, decl)
 	pois_func_name = Symbol("process_poisson_" * String(model_name))
 
 	# general bits of the function body
-	pois_func = :(function $(esc(pois_func_name))($(esc(agent_decl)), $(esc(:sim)))
+	pois_func = :(function $(esc(pois_func_name))($(esc(agent_decl)), $(esc(sim)))
 			rates = zeros(MVector{$(length(pois))})
 		end)
 	
