@@ -1,6 +1,6 @@
 
 function setup_grid(xs, ys)
-	pop = [ Person(x, y) for y=1:ys, x=1:xs ]
+	pop = [ Person(x/xs, y/ys) for y=1:ys, x=1:xs ]
 
 	ret = Person[]
 
