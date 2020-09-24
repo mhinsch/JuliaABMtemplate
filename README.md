@@ -30,9 +30,15 @@ a commandline version by editing `run_gui.jl`.
 In order to run the model the following packages have to be installed:
 
 DataStructures
+
 Distributions
+
 ArgParse
+
 Parameters
+
 MacroTools
+
 StaticArrays
+
 SimpleDirectMediaLayer
