@@ -165,7 +165,7 @@ macro processes(model_name, sim, agent_decl, decl)
 
 	spawn_func = :(
 		function $(esc(spawn_func_name))(agent::$(esc(agent_type)), sim)
-			$(esc(pois_func_name))(agent, sim)
+			$(esc(model_name)).$(esc(pois_func_name))(agent, sim)
 		end
 		)
 
