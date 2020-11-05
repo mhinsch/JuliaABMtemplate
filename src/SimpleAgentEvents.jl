@@ -90,7 +90,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 						# should not be needed as queue as well as actions are unique in 
 						# agents
 						# $(esc(:unschedule!))($(esc(:scheduler))($(esc(sim))), obj)
-						$(esc(func_name))(obj, $sim)
+						$(esc(model_name)).$(esc(func_name))(obj, $sim)
 					end
 				end
 
@@ -159,8 +159,6 @@ macro processes(model_name, sim, agent_decl, decl)
 
 	# awkward but works
 	push!(mod_body, Expr(:import, Expr(:., :., :., agent_type)))
-
-	dump(mod)
 
 	push!(mod_body, pois_func)
 	push!(mod_body, spawn_func)
