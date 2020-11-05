@@ -105,4 +105,6 @@ function run(n)
 	println(time_next(simulation.scheduler))
 end
 
+setup(10)
 
+run(10)

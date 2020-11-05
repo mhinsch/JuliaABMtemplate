@@ -107,7 +107,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 						# should not be needed as queue as well as actions are unique in 
 						# agents
 						# $(esc(:unschedule!))($(esc(:scheduler))($(esc(sim))), obj)
-						$(esc(model_name)).$(esc(func_name))(obj, $sim)
+						$(esc(model_name)).$func_name(obj, $sim)
 					end
 				end
 
@@ -136,6 +136,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 	# if we didn't select *any* action something went wrong
 	push!(func_body, :(println("No action selected! ", rnd, " ", rate)))
 
+	func
 end
 
 
@@ -165,17 +166,22 @@ macro processes(model_name, sim, agent_decl, decl)
 
 	spawn_func = :(
 		function $(esc(spawn_func_name))(agent::$(esc(agent_type)), sim)
-			$(esc(model_name)).$(esc(pois_func_name))(agent, sim)
+			$(esc(model_name)).$pois_func_name(agent, sim)
+			#$(esc(pois_func_name))(agent, sim)
 		end
 		)
 
+	#dump(spawn_func)
+
 	# the entire bunch of code
-	mod = :(module $(esc(model_name)) end)
+	mod = :(module $(esc(model_name)) 
+			import ..($agent_type), ..scheduler, ..schedule_in!
+		end)
 
 	mod_body = mod.args[3].args
 
 	# awkward but works
-	push!(mod_body, Expr(:import, Expr(:., :., :., agent_type)))
+	#push!(mod_body, Expr(:import, Expr(:., :., :., agent_type)))
 
 	push!(mod_body, pois_func)
 	push!(mod_body, spawn_func)
