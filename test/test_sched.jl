@@ -77,7 +77,7 @@ end
 
 function setup(n)
 	for i in 1:n
-		spawn_SimpleTest(A1(i), simulation)
+		SimpleTest.spawn(A1(i), simulation)
 	end
 end
 
