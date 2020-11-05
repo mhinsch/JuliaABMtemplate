@@ -35,7 +35,7 @@ function setup_model_grid(inf, rec, imm, mort, x, y, seed)
     model.pop[1].status = infected
 
     for person in model.pop
-        spawn_SIRm(person, model)
+        SIRm.spawn(person, model)
     end
 
     Random.seed!(seed)
@@ -51,7 +51,7 @@ function setup_model_geograph(inf, rec, imm, mort, N, near, nc, seed)
     model.pop[1].status = infected
 
     for person in model.pop
-        spawn_SIRm(person, model)
+        SIRm.spawn(person, model)
     end
 
     Random.seed!(seed)
