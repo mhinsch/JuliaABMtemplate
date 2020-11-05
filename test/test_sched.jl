@@ -63,29 +63,29 @@ function fallasleep(a::A1, model)
 end
 
 
-const sim = Simulation(PQScheduler{Float64}(), Model())
+const simulation = Simulation(PQScheduler{Float64}(), Model())
 
 
-@processes SimpleTest sim self::A1 begin
+@processes SimpleTest simulation self::A1 begin
 	# wake up
-	@poisson(2.0)	~ self.state == 0					=> wakeup(self, sim.model)
-	@poisson(1.0)	~ self.state == 0					=> sleep(self, sim.model)
-	@poisson(0.5)	~ self.state == 1 && self.food > 3	=> walk(self, sim.model)
-	@poisson(1.0) 	~ self.state == 1 && self.food <= 3	=> forage(self, sim.model)
-	@poisson(3.0)	~ self.state == 1 && self.food > 1	=> fallasleep(self, sim.model)
+	@poisson(2.0)	~ self.state == 0					=> wakeup(self, simulation.model)
+	@poisson(1.0)	~ self.state == 0					=> sleep(self, simulation.model)
+	@poisson(0.5)	~ self.state == 1 && self.food > 3	=> walk(self, simulation.model)
+	@poisson(1.0) 	~ self.state == 1 && self.food <= 3	=> forage(self, simulation.model)
+	@poisson(3.0)	~ self.state == 1 && self.food > 1	=> fallasleep(self, simulation.model)
 end
 
 function setup(n)
 	for i in 1:n
-		spawn_SimpleTest(A1(i), sim)
+		spawn_SimpleTest(A1(i), simulation)
 	end
 end
 
 function run(n)
 	for i in 1:n
-		next!(sim.scheduler)
+		next!(simulation.scheduler)
 	end
-	println(time_next(sim.scheduler))
+	println(time_next(simulation.scheduler))
 end
 
 
