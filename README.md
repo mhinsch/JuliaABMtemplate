@@ -30,9 +30,15 @@ Run as `julia run_gui.jl` or `julia run_cmdl.jl`. Run with `--help` to see comma
 In order to run the model the following packages have to be installed:
 
 DataStructures
+
 Distributions
+
 ArgParse
+
 Parameters
+
 MacroTools
+
 StaticArrays
+
 SimpleDirectMediaLayer (for GUI only)
