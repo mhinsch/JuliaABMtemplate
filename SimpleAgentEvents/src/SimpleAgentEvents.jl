@@ -32,24 +32,9 @@ using StaticArrays
 # in which module should rand. println, etc. be executed?
 
 
-macro processes(model_name, sim, agent_decl, decl)
-	# some superficial sanity checks
-	if ! isexpr(agent_decl, Symbol("::"))
-		error("@processes expects an agent declaration as 3rd argument")
-	end
-
-	if typeof(decl) != Expr || decl.head != :block
-		error("@processes expects a declaration block as 4th argument")
-	end
-
-	agent_name = agent_decl.args[1]
-	agent_type = agent_decl.args[2]
-
+function parse_declarations(lines)
 	pois = []
-	dir = []
 
-	# sort by distributions
-	lines = decl.args
 	for line in lines
 		# filter out line numbers
 		if typeof(line) == LineNumberNode
@@ -76,37 +61,39 @@ macro processes(model_name, sim, agent_decl, decl)
 		end
 	end
 
+	pois
+end
 
-	# name functions by model so that different models on the same type
-	# can be used in parallel
-	pois_func_name = Symbol("process_poisson_" * String(model_name))
+
+# add all poisson events
+function build_poisson_function(poisson_actions, func_name, model_name, agent_name, agent_type, sim)
 
 	# general bits of the function body
-	pois_func = :(function $(esc(pois_func_name))($(esc(agent_decl)), $(esc(sim)))
-			rates = zeros(MVector{$(length(pois))})
+	func = :(function $(esc(func_name))($(esc(agent_name)) :: $(esc(agent_type)), $(esc(sim)))
+			rates = zeros(MVector{$(length(poisson_actions))})
 		end)
-	
-	pois_func_body = pois_func.args[2].args
+
+	func_body = func.args[2].args
+
 	action_ifs = []
 
-	# add all poisson events
 	i = 1
-	for (d, a) in pois
-		rate = d.args[3]
-
+	for (d, a) in poisson_actions
 		if !iscall(a, :(=>))
 			error("event declaration expected: @<DISTR>(<RATE>) ~ COND => ACTION")
 		end
 
+		rate = d.args[3]
+
 		cond_act = rmlines(a.args)
-		cond = cond_act[2]
+		condition = cond_act[2]
 		action = cond_act[3]
 
 		# condition check
-		check = :(if $(esc(cond))
+		check = :(if $(esc(condition))
 				rates[$i] = $(esc(rate))
 			end)
-		push!(pois_func_body, check)
+		push!(func_body, check)
 
 		# check if selected, execute
 		ai = :(
@@ -120,7 +107,7 @@ macro processes(model_name, sim, agent_decl, decl)
 						# should not be needed as queue as well as actions are unique in 
 						# agents
 						# $(esc(:unschedule!))($(esc(:scheduler))($(esc(sim))), obj)
-						$(esc(pois_func_name))(obj, $sim)
+						$(esc(func_name))(obj, $sim)
 					end
 				end
 
@@ -136,7 +123,7 @@ macro processes(model_name, sim, agent_decl, decl)
 	end
 
 	# bits between conditions and selection
-	push!(pois_func_body, :(rate = $(esc(:sum))(rates);
+	push!(func_body, :(rate = $(esc(:sum))(rates);
 		if rate == 0.0
 			return
 		end;
@@ -144,25 +131,50 @@ macro processes(model_name, sim, agent_decl, decl)
 		rnd = rand() * rate
 		))
 
-	append!(pois_func_body, action_ifs)
+	append!(func_body, action_ifs)
 
 	# if we didn't select *any* action something went wrong
-	push!(pois_func_body, :(println("No action selected! ", rnd, " ", rate)))
+	push!(func_body, :(println("No action selected! ", rnd, " ", rate)))
 
+	func
+end
+
+
+macro processes(model_name, sim, agent_decl, decl)
+	# some superficial sanity checks
+	@capture(agent_decl, agent_name_ :: agent_type_) ||
+		error("@processes expects an agent declaration as 3rd argument")
+
+	if typeof(decl) != Expr || decl.head != :block
+		error("@processes expects a declaration block as 4th argument")
+	end
+
+	# sort by distributions
+	pois = parse_declarations(decl.args)
+
+	# name functions by model so that different models on the same type
+	# can be used in parallel
+	pois_func_name = Symbol("process_poisson_" * String(model_name))
+
+	pois_func = build_poisson_function(pois, pois_func_name, model_name, agent_name, agent_type, sim)
+
+	# *** and we also need a function to get an agent started
+
+	# push spawn second, nice for interactive use as it shows the function
+	# name as output from the macro call
+	spawn_func_name = Symbol("spawn_" * String(model_name))
+
+	spawn_func = :(
+		function $(esc(spawn_func_name))(agent::$(esc(agent_type)), sim)
+			$(esc(pois_func_name))(agent, sim)
+		end
+		)
 
 	# the entire bunch of code
 	ret = Expr(:block)
 
 	push!(ret.args, pois_func)
-
-	# push spawn second, nice for interactive use as it shows the function
-	# name as output from the macro call
-	spawn_func_name = Symbol("spawn_" * String(model_name))
-	# and we also need a function to get an agent started
-	push!(ret.args, :(function $(esc(spawn_func_name))(agent::$(esc(agent_type)), sim)
-			$(esc(pois_func_name))(agent, sim)
-		end
-		))
+	push!(ret.args, spawn_func)
 
 	ret
 end
