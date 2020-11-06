@@ -15,12 +15,12 @@ The main parts of the model:
 - `params.jl` model parameters
 - `draw_gui.jl` draw the model to a canvas
 - `run_gui.jl` ties everything together, creates model from commandline parameters and runs it with GUI
+- `run_cmdl.jl` ties everything together, creates model from commandline parameters and runs without gui
 
 ## Remarks
 
+Run as `julia run_gui.jl` or `julia run_cmdl.jl`. Run with `--help` to see commandline options.
 
-Currently only a version using an SDL-based GUI is implemented, but it should be relatively straightforward to implement
-a commandline version by editing `run_gui.jl`.
 
 `draw_vector.jl` contains currently unused code to draw the world as an SVG image using Luxor.
 
@@ -35,4 +35,4 @@ ArgParse
 Parameters
 MacroTools
 StaticArrays
-SimpleDirectMediaLayer
+SimpleDirectMediaLayer (for GUI only)
