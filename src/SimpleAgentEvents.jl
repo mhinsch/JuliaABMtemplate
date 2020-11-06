@@ -119,6 +119,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 	# if we didn't select *any* action something went wrong
 	push!(func_body, :(println("No action selected! ", rnd, " ", rate)))
 
+	func
 end
 
 

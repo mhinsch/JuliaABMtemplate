@@ -89,3 +89,6 @@ function run(n)
 end
 
 
+setup(10)
+
+run(10)
