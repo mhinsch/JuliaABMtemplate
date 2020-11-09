@@ -90,7 +90,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 						# should not be needed as queue as well as actions are unique in 
 						# agents
 						# $(esc(:unschedule!))($(esc(:scheduler))($(esc(sim))), obj)
-						$(esc(model_name)).$func_name(obj, $sim)
+						$(esc(func_name))(obj, $sim)
 					end
 				end
 
@@ -137,7 +137,8 @@ macro processes(model_name, sim, agent_decl, decl)
 
 	# name functions by model so that different models on the same type
 	# can be used in parallel
-	pois_func_name = :process_poisson
+	pois_func_name = gensym("poisson")
+	pois_func_call = :process_poisson
 
 	pois_func = build_poisson_function(pois, pois_func_name, model_name, agent_name, agent_type, sim)
 
@@ -145,12 +146,12 @@ macro processes(model_name, sim, agent_decl, decl)
 
 	# push spawn second, nice for interactive use as it shows the function
 	# name as output from the macro call
-	spawn_func_name = :spawn
+	spawn_func_name = gensym("spawn")
+	spawn_func_call = :spawn
 
 	spawn_func = :(
 		function $(esc(spawn_func_name))(agent::$(esc(agent_type)), sim)
-			$(esc(model_name)).$pois_func_name(agent, sim)
-			#$(esc(pois_func_name))(agent, sim)
+			$(esc(pois_func_name))(agent, sim)
 		end
 		)
 
@@ -158,19 +159,23 @@ macro processes(model_name, sim, agent_decl, decl)
 
 	# the entire bunch of code
 	mod = :(module $(esc(model_name)) 
-			import ..($agent_type), ..scheduler, ..schedule_in!
+			import ..($pois_func_name), ..($spawn_func_name)
+			export $pois_func_call, $spawn_func_call
+
+			const $(esc(pois_func_call)) = $(esc(pois_func_name))
+			const $(esc(spawn_func_call)) = $(esc(spawn_func_name))
 		end)
 
-	mod_body = mod.args[3].args
-	push!(mod_body, Expr(:using, Expr(:., :., :., nameof(__module__))))
+	#mod_body = mod.args[3].args
+	#push!(mod_body, Expr(:using, Expr(:., :., :., nameof(__module__))))
 
 	# awkward but works
 	#push!(mod_body, Expr(:import, Expr(:., :., :., agent_type)))
 
-	push!(mod_body, pois_func)
-	push!(mod_body, spawn_func)
+	#push!(mod_body, pois_func)
+	#push!(mod_body, spawn_func)
 
-	Expr(:toplevel, mod)
+	Expr(:toplevel, pois_func, spawn_func, mod)
 end
 
 
