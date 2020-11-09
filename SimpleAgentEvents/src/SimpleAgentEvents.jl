@@ -179,6 +179,7 @@ macro processes(model_name, sim, agent_decl, decl)
 		end)
 
 	mod_body = mod.args[3].args
+	push!(mod_body, Expr(:using, Expr(:., :., :., nameof(__module__))))
 
 	# awkward but works
 	#push!(mod_body, Expr(:import, Expr(:., :., :., agent_type)))
