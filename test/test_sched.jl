@@ -4,8 +4,17 @@ using SimpleAgentEvents
 using SimpleAgentEvents.Scheduler
 
 
-mutable struct Model
+mutable struct A1
+	id :: Int
+	state :: Int
+	food :: Int
 end
+
+mutable struct Model
+	pop :: Vector{A1}
+end
+
+Model() = Model([])
 
 struct Simulation
 	scheduler :: PQScheduler{Float64}
@@ -14,12 +23,6 @@ end
 
 scheduler(sim) = sim.scheduler
 
-
-mutable struct A1
-	id :: Int
-	state :: Int
-	food :: Int
-end
 
 
 function A1(i)
@@ -75,10 +78,17 @@ const simulation = Simulation(PQScheduler{Float64}(), Model())
 	@poisson(3.0)	~ self.state == 1 && self.food > 1	=> fallasleep(self, simulation.model)
 end
 
-function setup(n)
-	for i in 1:n
-		SimpleTest.spawn(A1(i), simulation)
+@add_processes SimpleTest simulation m::Model begin
+	@poisson(10.0) ~ length(m.pop) < 10 => begin
+		push!(m.pop, A1(1))
+		SimpleTest.spawn(m.pop[end], simulation)
+		println("added agent")
+		[m]
 	end
+end
+
+function setup()
+	SimpleTest.spawn(simulation.model, simulation)
 end
 
 function run(n)
@@ -88,6 +98,6 @@ function run(n)
 	println(time_next(simulation.scheduler))
 end
 
-setup(10)
+setup()
 
 run(10)
