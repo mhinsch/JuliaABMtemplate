@@ -17,12 +17,15 @@
 
 module SimpleAgentEvents
 
-export @processes, Scheduler
+export @processes, @add_processes, Scheduler
 
 
 using MacroTools
 using Distributions
 using StaticArrays
+
+include("Scheduler.jl")
+#import .Scheduler
 
 
 # TODO
@@ -69,7 +72,7 @@ end
 function build_poisson_function(poisson_actions, func_name, model_name, agent_name, agent_type, sim)
 
 	# general bits of the function body
-	func = :(function $(esc(func_name))($(esc(agent_name)) :: $(esc(agent_type)), $(esc(sim)))
+	func = :(function $(esc(model_name)).$func_name($(esc(agent_name)) :: $(esc(agent_type)), $(esc(sim)))
 			rates = zeros(MVector{$(length(poisson_actions))})
 		end)
 
@@ -100,14 +103,14 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 			if rnd < rates[$i]
 #				println("@ ", w_time, " -> ", $(string(action)))
 
-				$(esc(:schedule_in!))($(esc(agent_name)), w_time, $(esc(:scheduler))($(esc(sim)))) do $(esc(agent_name))
+				$(esc(model_name)).schedule_in!($(esc(agent_name)), w_time) do $(esc(agent_name))
 					active = $(esc(action))
 
 					for obj in active 
 						# should not be needed as queue as well as actions are unique in 
 						# agents
 						# $(esc(:unschedule!))($(esc(:scheduler))($(esc(sim))), obj)
-						$(esc(func_name))(obj, $sim)
+						$(esc(model_name)).$func_name(obj, $sim)
 					end
 				end
 
@@ -139,8 +142,18 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 	func
 end
 
+function build_spawn_func(func_name, model_name, pois_func_name, agent_type)
+	:(
+	function $(esc(model_name)).$func_name(agent::$(esc(agent_type)), sim)
+		$(esc(model_name)).$pois_func_name(agent, sim)
+	end
+	)
+end
 
-macro processes(model_name, sim, agent_decl, decl)
+pois_func_name() = :process_poisson
+spawn_func_name() = :spawn
+
+function gen_functions(model_name, sim, agent_decl, decl)
 	# some superficial sanity checks
 	@capture(agent_decl, agent_name_ :: agent_type_) ||
 		error("@processes expects an agent declaration as 3rd argument")
@@ -152,50 +165,56 @@ macro processes(model_name, sim, agent_decl, decl)
 	# sort by distributions
 	pois = parse_declarations(decl.args)
 
-	# name functions by model so that different models on the same type
-	# can be used in parallel
-	pois_func_name = gensym("poisson")
-	pois_func_call = :process_poisson
-
-	pois_func = build_poisson_function(pois, pois_func_name, model_name, agent_name, agent_type, sim)
+	# *** scheduling function
+	pois_func = build_poisson_function(pois, pois_func_name(), model_name, agent_name, agent_type, sim)
 
 	# *** and we also need a function to get an agent started
+	spawn_func = build_spawn_func(spawn_func_name(), model_name, pois_func_name(), agent_type)
 
-	# push spawn second, nice for interactive use as it shows the function
-	# name as output from the macro call
-	spawn_func_name = gensym("spawn")
-	spawn_func_call = :spawn
-
-	spawn_func = :(
-		function $(esc(spawn_func_name))(agent::$(esc(agent_type)), sim)
-			$(esc(pois_func_name))(agent, sim)
-		end
-		)
-
-	#dump(spawn_func)
-
-	# the entire bunch of code
-	mod = :(module $(esc(model_name)) 
-			import ..($pois_func_name), ..($spawn_func_name)
-			export $pois_func_call, $spawn_func_call
-
-			const $(esc(pois_func_call)) = $(esc(pois_func_name))
-			const $(esc(spawn_func_call)) = $(esc(spawn_func_name))
-		end)
-
-	#mod_body = mod.args[3].args
-	#push!(mod_body, Expr(:using, Expr(:., :., :., nameof(__module__))))
-
-	# awkward but works
-	#push!(mod_body, Expr(:import, Expr(:., :., :., agent_type)))
-
-	#push!(mod_body, pois_func)
-	#push!(mod_body, spawn_func)
-
-	Expr(:toplevel, pois_func, spawn_func, mod)
+	pois_func, spawn_func
 end
 
 
-include("Scheduler.jl")
+macro processes(model_name, sim, agent_decl, decl)
+	pois_func, spawn_func = gen_functions(model_name, sim, agent_decl, decl)
+
+	pfn = pois_func_name()
+	sfn = spawn_func_name()
+
+	# the entire bunch of code
+	mod = :(module $(esc(model_name)) 
+			using SimpleAgentEvents
+			import SimpleAgentEvents.Scheduler
+			const SC = SimpleAgentEvents.Scheduler
+
+			export $(esc(pfn)), $(esc(sfn))
+
+			const scheduler = SC.PQScheduler{Float64}()
+			$(esc(:isempty))() = SC.isempty(scheduler)
+			$(esc(:schedule!))(fun, obj, at) = SC.schedule!(fun, obj, at, scheduler)
+			$(esc(:time_now))() = SC.time_now(scheduler)
+			$(esc(:time_next))() = SC.time_next(scheduler)
+			$(esc(:schedule_in!))(fun, obj, t) = SC.schedule_in!(fun, obj, t, scheduler)
+			$(esc(:next!))() = SC.next!(scheduler)
+			$(esc(:upto!))(atime) = SC.upto!(scheduler, atime)
+			$(esc(:unschedule!))(obj) = SC.unschedule!(obj, scheduler) 
+			$(esc(:reset!))() = SC.reset!(scheduler)
+		end)
+
+	mod_body = mod.args[3].args
+	push!(mod_body, esc(Expr(:function, pfn)))
+	push!(mod_body, esc(Expr(:function, sfn)))
+
+	Expr(:toplevel, mod, pois_func, spawn_func)
+end
+
+
+macro add_processes(model_name, sim, agent_decl, decl)
+	pois_func, spawn_func = gen_functions(model_name, sim, agent_decl, decl)
+
+	Expr(:toplevel, pois_func, spawn_func)
+end
+
+
 
 end

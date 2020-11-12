@@ -17,7 +17,7 @@
 
 module Scheduler
 
-export PQScheduler, isempty, schedule!, time_now, time_next, schedule_in!, next!, upto!, unschedule!
+export PQScheduler, isempty, schedule!, time_now, time_next, schedule_in!, next!, upto!, unschedule!, reset!
 
 
 using DataStructures
@@ -105,6 +105,12 @@ end
 function unschedule!(scheduler, obj::Any)
 	delete!(scheduler.queue, obj)
 	delete!(scheduler.actions, obj)
+end
+
+function reset!(scheduler)
+	empty!(scheduler.actions)
+	empty!(scheduler.queue)
+	scheduler.time = typeof(scheduler.time)(0)
 end
 
 end
