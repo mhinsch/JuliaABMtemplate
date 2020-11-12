@@ -7,6 +7,9 @@ using MacroTools
 using Distributions
 using StaticArrays
 
+include("Scheduler.jl")
+#import .Scheduler
+
 
 # TODO
 # useful return values in process_*
@@ -83,7 +86,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 			if rnd < rates[$i]
 #				println("@ ", w_time, " -> ", $(string(action)))
 
-				$(esc(:schedule_in!))($(esc(agent_name)), w_time, $(esc(:scheduler))($(esc(sim)))) do $(esc(agent_name))
+				$(esc(model_name)).schedule_in!($(esc(agent_name)), w_time) do $(esc(agent_name))
 					active = $(esc(action))
 
 					for obj in active 
@@ -163,7 +166,22 @@ macro processes(model_name, sim, agent_decl, decl)
 
 	# the entire bunch of code
 	mod = :(module $(esc(model_name)) 
+			using SimpleAgentEvents
+			import SimpleAgentEvents.Scheduler
+			const SC = SimpleAgentEvents.Scheduler
+
 			export $(esc(pfn)), $(esc(sfn))
+
+			const scheduler = SC.PQScheduler{Float64}()
+			$(esc(:isempty))() = SC.isempty(scheduler)
+			$(esc(:schedule!))(fun, obj, at) = SC.schedule!(fun, obj, at, scheduler)
+			$(esc(:time_now))() = SC.time_now(scheduler)
+			$(esc(:time_next))() = SC.time_next(scheduler)
+			$(esc(:schedule_in!))(fun, obj, t) = SC.schedule_in!(fun, obj, t, scheduler)
+			$(esc(:next!))() = SC.next!(scheduler)
+			$(esc(:upto!))(atime) = SC.upto!(scheduler, atime)
+			$(esc(:unschedule!))(obj) = SC.unschedule!(obj, scheduler) 
+			$(esc(:reset!))() = SC.reset!(scheduler)
 		end)
 
 	mod_body = mod.args[3].args
@@ -181,6 +199,5 @@ macro add_processes(model_name, sim, agent_decl, decl)
 end
 
 
-include("Scheduler.jl")
 
 end

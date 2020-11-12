@@ -1,7 +1,6 @@
 push!(LOAD_PATH, "./src")
 
 using SimpleAgentEvents
-using SimpleAgentEvents.Scheduler
 
 
 mutable struct A1
@@ -17,12 +16,8 @@ end
 Model() = Model([])
 
 struct Simulation
-	scheduler :: PQScheduler{Float64}
 	model :: Model
 end
-
-scheduler(sim) = sim.scheduler
-
 
 
 function A1(i)
@@ -66,7 +61,7 @@ function fallasleep(a::A1, model)
 end
 
 
-const simulation = Simulation(PQScheduler{Float64}(), Model())
+const simulation = Simulation(Model())
 
 
 @processes SimpleTest simulation self::A1 begin
@@ -93,9 +88,9 @@ end
 
 function run(n)
 	for i in 1:n
-		next!(simulation.scheduler)
+		SimpleTest.next!()
 	end
-	println(time_next(simulation.scheduler))
+	println(SimpleTest.time_next())
 end
 
 setup()
