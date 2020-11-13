@@ -27,7 +27,7 @@ function run(model, t_stop, logfile)
 
 	while t_stop <= 0 || t < t_stop
 		t1 = time()
-		upto!(model.scheduler, t) # run internal scheduler up to the next time step
+		SIRm.upto!(t) # run internal scheduler up to the next time step
 		
 		# we want the analysis to happen at every integral time step
 		if (now = trunc(Int, t)) >= last
@@ -52,7 +52,7 @@ function run(model, t_stop, logfile)
 			step *= 1.1                # max step size to about 1
 		end
 
-		println(t)
+#		println(t)
 	end
 end
 
@@ -115,7 +115,7 @@ const logf = prepare_outfiles("log_file.txt")
 
 ## run
 
-run(model, t_stop, logf)
+@time run(model, t_stop, logf)
 
 
 
