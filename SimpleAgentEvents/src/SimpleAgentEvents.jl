@@ -103,7 +103,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 			if rnd < rates[$i]
 #				println("@ ", w_time, " -> ", $(string(action)))
 
-				$(esc(model_name)).schedule_in!($(esc(agent_name)), w_time) do $(esc(agent_name))
+				$(esc(model_name)).schedule_in!($(esc(agent_name)), w_time) do $(esc(agent_name))::$(esc(agent_type))
 					active = $(esc(action))
 
 					for obj in active 
@@ -199,6 +199,7 @@ macro processes(model_name, sim, agent_decl, decl)
 			$(esc(:upto!))(atime) = SC.upto!(scheduler, atime)
 			$(esc(:unschedule!))(obj) = SC.unschedule!(obj, scheduler) 
 			$(esc(:reset!))() = SC.reset!(scheduler)
+			$(esc(:scheduler))() = scheduler
 		end)
 
 	mod_body = mod.args[3].args
