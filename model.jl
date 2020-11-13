@@ -43,7 +43,6 @@ Person(state, x, y) = Person(state, [], x, y)
 ### declare simulation
 
 mutable struct Model
-    scheduler :: PQScheduler{Float64}
     inf :: Float64
     rec :: Float64
     imm :: Float64
@@ -52,9 +51,7 @@ mutable struct Model
     pop :: Vector{Person}
 end
 
-scheduler(model :: Model) = model.scheduler
-
-Model(i, r, u, m) = Model(PQScheduler{Float64}(), i, r, u, m, [])
+Model(i, r, u, m) = Model(i, r, u, m, [])
 
 
 

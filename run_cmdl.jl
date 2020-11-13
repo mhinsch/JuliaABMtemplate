@@ -17,30 +17,17 @@
 
 include("setup.jl")
 
-using SimpleGui
-
-include("draw_gui.jl")
-
-
 
 ### run simulation with given setup and parameters
 
-function run(model, gui, graphs, t_stop, logfile)
+function run(model, t_stop, logfile)
 	t = 1.0
 	step = 1.0
 	last = 0
 
-	pause = false
-	quit = false
-	while ! quit
-		# don't do anything if we are in pause mode
-		if pause
-			sleep(0.03)
-			continue
-		end
-
+	while t_stop <= 0 || t < t_stop
 		t1 = time()
-		SIRm.upto!(t) # run internal scheduler up to the next time step
+		upto!(model.scheduler, t) # run internal scheduler up to the next time step
 		
 		# we want the analysis to happen at every integral time step
 		if (now = trunc(Int, t)) >= last
@@ -48,12 +35,6 @@ function run(model, gui, graphs, t_stop, logfile)
 			for i in last:now
 				# print all stats to file
 				print_stats_stat_log(logfile, model)
-				# this is suboptimal, as all these are calculated in print_stats as well
-				# solution forthcoming
-				add_value!(graphs[1], count(ag -> ag.status == susceptible, model.pop))
-				add_value!(graphs[2], count(ag -> ag.status == infected, model.pop))
-				add_value!(graphs[3], count(ag -> ag.status == immune, model.pop))
-				add_value!(graphs[4], count(ag -> ag.status == dead, model.pop))
 			end
 			# remember when we did the last data output
 			last = now
@@ -72,31 +53,6 @@ function run(model, gui, graphs, t_stop, logfile)
 		end
 
 		println(t)
-
-		# end simulation if requested number of steps has been run
-		if t_stop > 0 && t >= t_stop
-			break
-		end
-		
-		# check for user input
-		while (ev = SDL2.event()) != nothing
-			if typeof(ev) <: SDL2.KeyboardEvent 
-				if ev._type == SDL2.KEYDOWN
-					key = ev.keysym.sym
-					if key == SDL2.SDLK_ESCAPE || key == SDL2.SDLK_q
-						quit = true
-						break;
-					elseif key == SDL2.SDLK_p || key == SDL2.SDLK_SPACE
-						pause = ! pause
-					end
-				end
-			end
-		end
-
-		# draw gui to video memory
-		draw(model, graphs, gui)
-		# copy to screen
-		render!(gui)
 	end
 end
 
@@ -156,15 +112,10 @@ const model = topology == 1 ?
 
 const logf = prepare_outfiles("log_file.txt")
 
-# two 640x640 panels next to each other
-const gui = setup_Gui("SIRSm", 640, 640, 2, 1)
-const graphs = [Graph{Int}(green(255)), Graph{Int}(red(255)), Graph{Int}(blue(255)), Graph{Int}(WHITE)] 
-
-
 
 ## run
 
-run(model, gui, graphs, t_stop, logf)
+run(model, t_stop, logf)
 
 
 
@@ -172,4 +123,3 @@ run(model, gui, graphs, t_stop, logf)
 
 close(logf)
 
-SDL2.Quit()
