@@ -52,7 +52,7 @@ function run(model, t_stop, logfile)
 			step *= 1.1                # max step size to about 1
 		end
 
-		println(t)
+		#println(t)
 	end
 end
 
@@ -115,7 +115,7 @@ const logf = prepare_outfiles("log_file.txt")
 
 ## run
 
-run(model, t_stop, logf)
+@time run(model, t_stop, logf)
 
 
 
