@@ -107,6 +107,9 @@ function reset!(scheduler)
 end
 
 
+# *** alternative, simpler implementation
+# this is actually substantially slower with more memory allocation
+
 mutable struct PQScheduler2{TIME}
 	queue :: PriorityQueue{Any, Tuple{TIME, Function}}
 	now :: TIME
@@ -119,17 +122,17 @@ PQScheduler2{TIME}() where {TIME} = PQScheduler2{TIME}(
 Base.isempty(scheduler::PQScheduler2{TIME}) where {TIME} = isempty(scheduler.queue)
 
 "add a single item"
-function schedule!(fun, obj, at, scheduler::PQScheduler2)
+function schedule!(fun, obj, at, scheduler::PQScheduler2{T}) where{T}
 	scheduler.queue[obj] = (at, fun)
 #	println("<- ", at)
 end
 
 
-time_next(scheduler::PQScheduler2) = isempty(scheduler) ? scheduler.now : peek(scheduler.queue)[2][1]
+time_next(scheduler::PQScheduler2{T}) where{T} = isempty(scheduler) ? scheduler.now : peek(scheduler.queue)[2][1]
 
 
 "run the next action"
-function next!(scheduler::PQScheduler2)
+function next!(scheduler::PQScheduler2{T}) where{T}
 #	println("! ", scheduler.now)
 
 	if isempty(scheduler)
@@ -146,7 +149,7 @@ end
 # we could implement this using repeated calls to next but that
 # would require redundant calls to peek
 "run actions up to `time`"
-function upto!(scheduler::PQScheduler2, atime)
+function upto!(scheduler::PQScheduler2{T}, atime) where{T}
 #	println("! ", scheduler.now, " ... ", time)
 
 	while !isempty(scheduler)
@@ -165,11 +168,11 @@ function upto!(scheduler::PQScheduler2, atime)
 	scheduler
 end
 
-function unschedule!(scheduler::PQScheduler2, obj::Any)
+function unschedule!(scheduler::PQScheduler2{T}, obj::Any) where{T}
 	delete!(scheduler.queue, obj)
 end
 
-function reset!(scheduler::PQScheduler2)
+function reset!(scheduler::PQScheduler2{T}) where{T}
 	empty!(scheduler.queue)
 	scheduler.time = typeof(scheduler.time)(0)
 end
