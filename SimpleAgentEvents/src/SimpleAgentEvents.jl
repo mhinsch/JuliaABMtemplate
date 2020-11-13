@@ -189,7 +189,7 @@ macro processes(model_name, sim, agent_decl, decl)
 
 			export $(esc(pfn)), $(esc(sfn))
 
-			const scheduler = SC.PQScheduler{Float64}()
+			const scheduler = SC.PQScheduler2{Float64}()
 			$(esc(:isempty))() = SC.isempty(scheduler)
 			$(esc(:schedule!))(fun, obj, at) = SC.schedule!(fun, obj, at, scheduler)
 			$(esc(:time_now))() = SC.time_now(scheduler)
