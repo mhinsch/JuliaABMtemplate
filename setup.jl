@@ -28,9 +28,9 @@ include("analysis.jl")
 
 
 function setup(par, seed)
-    Random.seed!(seed)
+	Random.seed!(seed)
 
-    model = Model(par.r_inf, par.r_rec, par.r_imm, par.r_mort)
+	model = Model(par.r_inf, par.r_rec, par.r_imm, par.r_mort)
 
 	if par.topology == 1
 		model.pop = setup_grid(par.x, par.y)
