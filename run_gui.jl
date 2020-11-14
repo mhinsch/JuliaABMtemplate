@@ -25,9 +25,9 @@ include("draw_gui.jl")
 
 ### run simulation with given setup and parameters
 
-function run(model, gui, graphs, t_stop, logfile)
+function run(model, gui, graphs, t_stop, logfile, max_step = 1.0)
 	t = 1.0
-	step = 1.0
+	step = max_step
 	last = 0
 
 	pause = false
@@ -67,7 +67,7 @@ function run(model, gui, graphs, t_stop, logfile)
 		# adjust simulation step size
 		if dt > 0.1
 			step /= 1.1
-		elseif dt < 0.03 && step < 1.0 # this is a simple model, so let's limit
+		elseif dt < 0.03 && step < max_step # this is a simple model, so let's limit
 			step *= 1.1                # max step size to about 1
 		end
 
@@ -124,6 +124,10 @@ const arg_settings = ArgParseSettings("run simulation", autofix_names=true)
 		help = "at which time to stop the simulation" 
 		arg_type = Float64 
 		default = 0.0
+	"--max-step", "-m"
+		help = "upper limit for simulated time per frame"
+		arg_type = Float64
+		default = 1.0
 end
 
 # new group of arguments
@@ -155,7 +159,7 @@ const graphs = [Graph{Int}(green(255)), Graph{Int}(red(255)), Graph{Int}(blue(25
 ## run
 
 init_events(model)
-run(model, gui, graphs, args[:stop_time], logf)
+run(model, gui, graphs, args[:stop_time], logf, args[:max_step])
 
 
 
