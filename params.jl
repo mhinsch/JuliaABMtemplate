@@ -36,6 +36,9 @@ using Parameters
 	"mortality rate"
 	r_mort	:: Float64 = 0.1
 
+	"world topology (1=matrix, 2=geograph)"
+	topology:: Int = 1
+
 	"world width (only matrix)"
 	x 		:: Int = 50
 	"world height (only matrix)"

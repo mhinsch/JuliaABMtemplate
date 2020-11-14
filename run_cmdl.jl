@@ -79,10 +79,6 @@ const arg_settings = ArgParseSettings("run simulation", autofix_names=true)
 		help = "at which time to stop the simulation" 
 		arg_type = Float64 
 		default = 0.0
-	"--world-topology", "-w"
-		help = "matrix (1) or random geo graph (2)"
-		arg_type = Int
-		default = 1
 	"--step-wise", "-s"
 		help = "run the model step-wise instead of event-based"
 		arg_type = Bool
@@ -110,10 +106,9 @@ const p = @create_from_args(args, Params)
 ## setup
 
 const t_stop = args[:stop_time] 
-const topology = args[:world_topology]
 const seed = args[:rand_seed]
 
-const model = topology == 1 ?
+const model = p.topology == 1 ?
 	setup_model_grid(p.r_inf, p.r_rec, p.r_imm, p.r_mort, p.x, p.y, seed) :
 	setup_model_geograph(p.r_inf, p.r_rec, p.r_imm, p.r_mort, p.N, p.near, p.nc, seed)
 
@@ -125,6 +120,7 @@ const logf = prepare_outfiles("log_file.txt")
 if args[:step_wise]
 	@time run_steps(model, trunc(Int, t_stop), logf, args[:shuffle])
 else
+	init_events(model)
 	@time run_events(model, t_stop, logf)
 end
 
