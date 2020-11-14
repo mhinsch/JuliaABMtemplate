@@ -8,7 +8,6 @@ using Distributions
 using StaticArrays
 
 include("Scheduler.jl")
-#import .Scheduler
 
 
 # TODO
@@ -120,7 +119,7 @@ function build_poisson_function(poisson_actions, func_name, model_name, agent_na
 	append!(func_body, action_ifs)
 
 	# if we didn't select *any* action something went wrong
-	push!(func_body, :(println("No action selected! ", rnd, " ", rate)))
+	push!(func_body, :(println("No action selected! ", rnd, " ", rate);return))
 
 	func
 end
@@ -172,7 +171,7 @@ macro processes(model_name, sim, agent_decl, decl)
 
 			export $(esc(pfn)), $(esc(sfn))
 
-			const scheduler = SC.PQScheduler2{Float64}()
+			const scheduler = SC.PQScheduler{Float64}()
 			$(esc(:isempty))() = SC.isempty(scheduler)
 			$(esc(:schedule!))(fun, obj, at) = SC.schedule!(fun, obj, at, scheduler)
 			$(esc(:time_now))() = SC.time_now(scheduler)
