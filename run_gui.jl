@@ -142,12 +142,7 @@ const p = @create_from_args(args, Params)
 
 ## setup
 
-const t_stop = args[:stop_time] 
-const seed = args[:rand_seed]
-
-const model = p.topology == 1 ?
-	setup_model_grid(p.r_inf, p.r_rec, p.r_imm, p.r_mort, p.x, p.y, seed) :
-	setup_model_geograph(p.r_inf, p.r_rec, p.r_imm, p.r_mort, p.N, p.near, p.nc, seed)
+const model = setup(p, args[:rand_seed])
 
 const logf = prepare_outfiles("log_file.txt")
 
@@ -159,7 +154,8 @@ const graphs = [Graph{Int}(green(255)), Graph{Int}(red(255)), Graph{Int}(blue(25
 
 ## run
 
-run(model, gui, graphs, t_stop, logf)
+init_events(model)
+run(model, gui, graphs, args[:stop_time], logf)
 
 
 

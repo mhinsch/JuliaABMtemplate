@@ -18,7 +18,9 @@
 include("setup.jl")
 
 
+
 ### run simulation with given setup and parameters
+
 
 function run_events(model, t_stop, logfile)
 	t = 1.0
@@ -46,15 +48,14 @@ function run_events(model, t_stop, logfile)
 end
 
 
-### run simulation with given setup and parameters
-
 function run_steps(model, t_stop, logfile, ord)
 	for t in 1:t_stop
-		update!(model, ord)
+		update_model!(model, ord)
 		# print all stats to file
 		print_stats_stat_log(logfile, model)
 	end
 end
+
 
 
 ### setup, run, cleanup
@@ -105,23 +106,19 @@ const p = @create_from_args(args, Params)
 
 ## setup
 
-const t_stop = args[:stop_time] 
-const seed = args[:rand_seed]
-
-const model = p.topology == 1 ?
-	setup_model_grid(p.r_inf, p.r_rec, p.r_imm, p.r_mort, p.x, p.y, seed) :
-	setup_model_geograph(p.r_inf, p.r_rec, p.r_imm, p.r_mort, p.N, p.near, p.nc, seed)
+const model = setup(p, args[:rand_seed])
 
 const logf = prepare_outfiles("log_file.txt")
+
 
 
 ## run
 
 if args[:step_wise]
-	@time run_steps(model, trunc(Int, t_stop), logf, args[:shuffle])
+	@time run_steps(model, trunc(Int, args[:stop_time]), logf, args[:shuffle])
 else
 	init_events(model)
-	@time run_events(model, t_stop, logf)
+	@time run_events(model, args[:stop_time], logf)
 end
 
 

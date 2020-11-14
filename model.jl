@@ -88,6 +88,13 @@ Model(i, r, u, m) = Model(i, r, u, m, [])
 end
 
 
+function init_events(model)
+    for person in model.pop
+        SIRm.spawn(person, model)
+    end
+end
+
+
 ### step-wise: define update functions
 
 function update_agent!(a, model)
@@ -120,7 +127,7 @@ function update_agent!(a, model)
 end
 
 
-function update!(model, rand_order = true)
+function update_model!(model, rand_order = true)
 	order = rand_order ? shuffle(model.pop) : model.pop
 
 	for a in order

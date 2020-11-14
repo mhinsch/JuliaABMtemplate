@@ -28,26 +28,29 @@ using Parameters
 	# element documentation is automatically translated into commandline help text
 
 	"infection rate"
-	r_inf	:: Float64 = 0.1
+	r_inf		:: Float64 = 0.1
 	"recovery rate"
-	r_rec	:: Float64 = 0.1
+	r_rec		:: Float64 = 0.1
 	"rate of acquiring immunity"
-	r_imm	:: Float64 = 0.1
+	r_imm		:: Float64 = 0.1
 	"mortality rate"
-	r_mort	:: Float64 = 0.1
+	r_mort		:: Float64 = 0.1
+
+	"number of infected to start with"
+	n_infected	:: Int = 10
 
 	"world topology (1=matrix, 2=geograph)"
-	topology:: Int = 1
+	topology	:: Int = 1
 
 	"world width (only matrix)"
-	x 		:: Int = 50
+	x 			:: Int = 50
 	"world height (only matrix)"
-	y 		:: Int = 50
+	y 			:: Int = 50
 
 	"number of agents (only geo graph)"
-	N 		:: Int = 2500
+	N 			:: Int = 2500
 	"distance threshold for connections (only geo graph)"
-	near 	:: Float64 = 0.03
+	near 		:: Float64 = 0.03
 	"number of global connections (only geo graph)"
-	nc 		:: Int = 20
+	nc 			:: Int = 20
 end

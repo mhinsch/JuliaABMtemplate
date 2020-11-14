@@ -24,38 +24,28 @@ include("setup_world.jl")
 include("analysis.jl")
 
 
-
 ### prepare the simulation
 
-function init_events(model)
-    for person in model.pop
-        SIRm.spawn(person, model)
-    end
-end
 
-# this function prepares running the simulation on a grid world
-function setup_model_grid(inf, rec, imm, mort, x, y, seed)
-    
-    model = Model(inf, rec, imm, mort)
-    model.pop = setup_grid(x, y)
-    model.pop[1].status = infected
-
+function setup(par, seed)
     Random.seed!(seed)
+
+    model = Model(par.r_inf, par.r_rec, par.r_imm, par.r_mort)
+
+	if par.topology == 1
+		model.pop = setup_grid(par.x, par.y)
+	else
+		model.pop = setup_geograph(par.N, par.near, par.nc)
+	end
+
+	for i in 1:par.n_infected
+		rand(model.pop).status = infected
+	end
 
 	model
 end
-    
-# prepare running the simulation on a random geometric graph
-# the number of connections and with it runtime is very sensitive to near
-function setup_model_geograph(inf, rec, imm, mort, N, near, nc, seed)
-    model = Model(inf, rec, imm, mort)
-    model.pop = setup_geograph(N, near, nc)
-    model.pop[1].status = infected
 
-    Random.seed!(seed)
 
-	model
-end
 
 function prepare_outfiles(fname)
 	logfile = open(fname, "w")
