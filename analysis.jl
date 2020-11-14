@@ -55,7 +55,8 @@ end
 # where <name> is the first argument to the @observe macro
 
 @observe stat_log model begin
-	@show "time" time_now(model.scheduler)
+	# doesn't work with recent changes in SimpleAgentEvents
+	#	@show "time" time_now(model.scheduler)
 
 	@for a in model.pop begin
 		@stat("n_susceptible", 	CountAcc) <| (a.status == susceptible)

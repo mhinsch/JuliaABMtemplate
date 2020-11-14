@@ -40,7 +40,7 @@ function run(model, gui, graphs, t_stop, logfile)
 		end
 
 		t1 = time()
-		upto!(model.scheduler, t) # run internal scheduler up to the next time step
+		SIRm.upto!(t) # run internal scheduler up to the next time step
 		
 		# we want the analysis to happen at every integral time step
 		if (now = trunc(Int, t)) >= last
