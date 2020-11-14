@@ -27,16 +27,18 @@ include("analysis.jl")
 
 ### prepare the simulation
 
+function init_events(model)
+    for person in model.pop
+        SIRm.spawn(person, model)
+    end
+end
+
 # this function prepares running the simulation on a grid world
 function setup_model_grid(inf, rec, imm, mort, x, y, seed)
     
     model = Model(inf, rec, imm, mort)
     model.pop = setup_grid(x, y)
     model.pop[1].status = infected
-
-    for person in model.pop
-        SIRm.spawn(person, model)
-    end
 
     Random.seed!(seed)
 
@@ -49,10 +51,6 @@ function setup_model_geograph(inf, rec, imm, mort, N, near, nc, seed)
     model = Model(inf, rec, imm, mort)
     model.pop = setup_geograph(N, near, nc)
     model.pop[1].status = infected
-
-    for person in model.pop
-        SIRm.spawn(person, model)
-    end
 
     Random.seed!(seed)
 

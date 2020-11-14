@@ -55,7 +55,7 @@ Model(i, r, u, m) = Model(i, r, u, m, [])
 
 
 
-### declare simulation processes
+### event-based: declare simulation processes
 
 @processes SIRm model person::Person begin
     @poisson(model.inf * count(p -> p.status == infected, person.contacts)) ~
@@ -88,4 +88,42 @@ Model(i, r, u, m) = Model(i, r, u, m, [])
 end
 
 
+### step-wise: define update functions
 
+function update_agent!(a, model)
+	if a.status == susceptible
+		for c in a.contacts
+			if c.status == infected && rand() < model.inf
+				a.status = infected
+				return
+			end
+		end
+	
+	elseif a.status == infected
+		p_nochange = (1.0 - model.rec) * (1.0 - model.imm) * (1.0 - model.mort)
+		p_change = 1.0 - p_nochange
+		f = p_change / (model.rec + model.imm + model.mort)
+		t_rec = p_nochange + model.rec * f
+		t_imm = t_rec + model.imm * f
+
+		r = rand()
+
+		if r < p_nochange # nothing happens
+		elseif r < t_rec
+			a.status = susceptible
+		elseif r < t_imm
+			a.status = immune
+		else
+			a.status = dead
+		end
+	end
+end
+
+
+function update!(model, rand_order = true)
+	order = rand_order ? shuffle(model.pop) : model.pop
+
+	for a in order
+		update_agent!(a, model)
+	end
+end

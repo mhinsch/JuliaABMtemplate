@@ -20,13 +20,12 @@ include("setup.jl")
 
 ### run simulation with given setup and parameters
 
-function run(model, t_stop, logfile)
+function run_events(model, t_stop, logfile)
 	t = 1.0
 	step = 1.0
 	last = 0
 
 	while t_stop <= 0 || t < t_stop
-		t1 = time()
 		SIRm.upto!(t) # run internal scheduler up to the next time step
 		
 		# we want the analysis to happen at every integral time step
@@ -42,20 +41,20 @@ function run(model, t_stop, logfile)
 
 		t += step
 
-		# measure (real-world) time it took to simulate one step
-		dt = time() - t1
-
-		# adjust simulation step size
-		if dt > 0.1
-			step /= 1.1
-		elseif dt < 0.03 && step < 1.0 # this is a simple model, so let's limit
-			step *= 1.1                # max step size to about 1
-		end
-
 #		println(t)
 	end
 end
 
+
+### run simulation with given setup and parameters
+
+function run_steps(model, t_stop, logfile, ord)
+	for t in 1:t_stop
+		update!(model, ord)
+		# print all stats to file
+		print_stats_stat_log(logfile, model)
+	end
+end
 
 
 ### setup, run, cleanup
@@ -84,6 +83,14 @@ const arg_settings = ArgParseSettings("run simulation", autofix_names=true)
 		help = "matrix (1) or random geo graph (2)"
 		arg_type = Int
 		default = 1
+	"--step-wise", "-s"
+		help = "run the model step-wise instead of event-based"
+		arg_type = Bool
+		default = false
+	"--shuffle"
+		help = "if running step-wise shuffle the population"
+		arg_type = Bool
+		default = false
 end
 
 # new group of arguments
@@ -115,7 +122,11 @@ const logf = prepare_outfiles("log_file.txt")
 
 ## run
 
-@time run(model, t_stop, logf)
+if args[:step_wise]
+	@time run_steps(model, trunc(Int, t_stop), logf, args[:shuffle])
+else
+	@time run_events(model, t_stop, logf)
+end
 
 
 
