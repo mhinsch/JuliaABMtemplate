@@ -1,6 +1,6 @@
 module Scheduler
 
-export PQScheduler, PQScheduler2, isempty, schedule!, time_now, time_next, schedule_in!, next!, upto!, unschedule!, reset!
+export PQScheduler, isempty, schedule!, time_now, time_next, schedule_in!, next!, upto!, unschedule!, reset!
 
 
 using DataStructures
@@ -29,6 +29,7 @@ end
 
 "Time stamp of the last action that was executed by `scheduler`."
 time_now(scheduler) = scheduler.now
+
 "Time stamp of the next action to be executed by `scheduler` or `time_now` if it is empty."
 time_next(scheduler) = isempty(scheduler) ? scheduler.now : peek(scheduler.queue)[2]
 
@@ -91,7 +92,7 @@ end
 function reset!(scheduler)
 	empty!(scheduler.actions)
 	empty!(scheduler.queue)
-	scheduler.time = typeof(scheduler.time)(0)
+	scheduler.now = typeof(scheduler.now)(0)
 end
 
 

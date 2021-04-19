@@ -161,9 +161,13 @@ function gen_functions(model_name, sim, agent_decl, decl)
 end
 
 
-"Generate event-based scheduling for a model.
+"""
 
-`@processes(model_name, sim, agent_decl, decl)`
+    @processes(model_name, sim, agent_decl, decl)
+
+
+Generate event-based scheduling for a model.
+
 
 # Arguments
 - `model_name`: The name of the model and of the module to be generated.
@@ -229,7 +233,7 @@ for i in 1:10
 	Test.next!()
 end
 ```
-"
+"""
 macro processes(model_name, sim, agent_decl, decl)
 	pois_func, spawn_func = gen_functions(model_name, sim, agent_decl, decl)
 
@@ -244,7 +248,7 @@ macro processes(model_name, sim, agent_decl, decl)
 
 			export $(esc(pfn)), $(esc(sfn))
 
-			const scheduler = SC.PQScheduler2{Float64}()
+			const scheduler = SC.PQScheduler{Float64}()
 			$(esc(:isempty))() = SC.isempty(scheduler)
 			$(esc(:schedule!))(fun, obj, at) = SC.schedule!(fun, obj, at, scheduler)
 			$(esc(:time_now))() = SC.time_now(scheduler)
