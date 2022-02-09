@@ -19,8 +19,7 @@ module SimpleGui
 
 export setup_window, Panel, update!, render!, Gui, setup_Gui, SDL2
 
-using SimpleDirectMediaLayer
-const SDL2 = SimpleDirectMediaLayer 
+using SimpleDirectMediaLayer.LibSDL2
 
 # for the canvas
 using SSDL
@@ -28,31 +27,31 @@ using SSDL
 
 # create a window
 function setup_window(wx, wy, title)
-	SDL2.GL_SetAttribute(SDL2.GL_MULTISAMPLEBUFFERS, 16)
-	SDL2.GL_SetAttribute(SDL2.GL_MULTISAMPLESAMPLES, 16)
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 16)
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16)
 
-	SDL2.init()
+	SDL_Init(SDL_INIT_EVERYTHING)
 
-	win = SDL2.CreateWindow(title, Int32(0), Int32(0), Int32(wx), Int32(wy), 
-		UInt32(SDL2.WINDOW_SHOWN))
-	SDL2.SetWindowResizable(win,false)
+	win = SDL_CreateWindow(title, Int32(0), Int32(0), Int32(wx), Int32(wy), 
+		UInt32(SDL_WINDOW_SHOWN))
+	SDL_SetWindowResizable(win, SDL_FALSE)
 
-	SDL2.CreateRenderer(win, Int32(-1), UInt32(SDL2.RENDERER_ACCELERATED))
+	SDL_CreateRenderer(win, Int32(-1), UInt32(SDL_RENDERER_ACCELERATED))
 end
 
 
 # one panel + an associated texture matching the window format
 struct Panel
-	rect :: SDL2.Rect
+	rect :: Ref{SDL_Rect}
 	texture
 	renderer
 end
 
 function Panel(renderer, sizex, sizey, offs_x, offs_y)
 	Panel(
-		SDL2.Rect(offs_x, offs_y, sizex, sizey),
-		SDL2.CreateTexture(renderer, SDL2.PIXELFORMAT_ARGB8888, 
-			Int32(SDL2.TEXTUREACCESS_STREAMING), Int32(sizex), Int32(sizey)),
+		Ref(SDL_Rect(offs_x, offs_y, sizex, sizey)),
+		SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, 
+			Int32(SDL_TEXTUREACCESS_STREAMING), Int32(sizex), Int32(sizey)),
 		renderer
 	)
 end
@@ -60,7 +59,7 @@ end
 
 # copy buffer to panel texture
 function update!(p :: Panel, buf)
-	SDL2.UpdateTexture(p.texture, C_NULL, buf, Int32(p.rect.w * 4))
+	SDL_UpdateTexture(p.texture, C_NULL, buf, Int32(p.rect[].w * 4))
 end
 
 # overload for canvas
@@ -68,7 +67,7 @@ update!(p :: Panel, c :: Canvas) = update!(p, c.pixels)
 
 # draw texture on screen
 function render!(p :: Panel)
-	SDL2.RenderCopy(p.renderer, p.texture, C_NULL, pointer_from_objref(p.rect))
+	SDL_RenderCopy(p.renderer, p.texture, C_NULL, pointer_from_objref(p.rect))
 end
 
 
@@ -101,11 +100,11 @@ end
 
 # draw all panels to the screen
 function render!(gui)
-	SDL2.RenderClear(gui.panels[1].renderer)
+	SDL_RenderClear(gui.panels[1].renderer)
 	for p in gui.panels
 		render!(p)
 	end
-    SDL2.RenderPresent(gui.panels[1].renderer)
+    SDL_RenderPresent(gui.panels[1].renderer)
 end
 
 

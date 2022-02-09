@@ -17,6 +17,7 @@
 
 include("setup.jl")
 
+using SimpleDirectMediaLayer.LibSDL2
 using SimpleGui
 
 include("draw_gui.jl")
@@ -78,19 +79,25 @@ function run(model, gui, graphs, t_stop, logfile, max_step = 1.0)
 			break
 		end
 		
-		# check for user input
-		while (ev = SDL2.event()) != nothing
-			if typeof(ev) <: SDL2.KeyboardEvent 
-				if ev._type == SDL2.KEYDOWN
-					key = ev.keysym.sym
-					if key == SDL2.SDLK_ESCAPE || key == SDL2.SDLK_q
-						quit = true
-						break;
-					elseif key == SDL2.SDLK_p || key == SDL2.SDLK_SPACE
-						pause = ! pause
-					end
-				end
-			end
+		event_ref = Ref{SDL_Event}()
+        while Bool(SDL_PollEvent(event_ref))
+            evt = event_ref[]
+            evt_ty = evt.type
+			if evt_ty == SDL_QUIT
+                quit = true
+                break
+            elseif evt_ty == SDL_KEYDOWN
+                scan_code = evt.key.keysym.scancode
+                if scan_code == SDL_SCANCODE_ESCAPE || scan_code == SDL_SCANCODE_Q
+					quit = true
+					break
+                elseif scan_code == SDL_SCANCODE_P || scan_code == SDL_SCANCODE_SPACE
+					pause = !pause
+                    break
+                else
+                    break
+                end
+            end
 		end
 
 		# draw gui to video memory
