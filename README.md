@@ -44,19 +44,13 @@ Run as `julia run_gui.jl` or `julia run_cmdl.jl`. Run with `--help` to see comma
 
 In order to run the model the following packages have to be installed:
 
-MiniEvents (not registered yet, for now install as `add https://github.com/mhinsch/MiniEvents.jl`)
-
-DataStructures
-
-Distributions
-
-ArgParse
-
-Parameters
-
-MacroTools
-
-StaticArrays
-
-SimpleDirectMediaLayer (for GUI only)
+- MiniEvents (not registered yet, for now install as `add https://github.com/mhinsch/MiniEvents.jl`)
+- MiniObserve (not registered yet, for now install as `add https://github.com/mhinsch/MiniObserve.jl`)
+- DataStructures
+- Distributions
+- ArgParse
+- Parameters
+- MacroTools
+- StaticArrays
+- SimpleDirectMediaLayer (for GUI only)
 
