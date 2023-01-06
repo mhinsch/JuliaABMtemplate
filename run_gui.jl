@@ -51,8 +51,7 @@ function run(sim, gui, graphs, t_stop, logfile, max_step = 1.0)
 				# print all stats to file
 				data = observe(Data, model, i)
 				log_results(logfile, data)
-				# this is suboptimal, as all these are calculated in print_stats as well
-				# solution forthcoming
+				# we can just reuse the observation results
 				add_value!(graphs[1], data.susceptible.n)
 				add_value!(graphs[2], data.infected.n)
 				add_value!(graphs[3], data.immune.n)
