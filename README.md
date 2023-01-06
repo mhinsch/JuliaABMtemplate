@@ -29,7 +29,7 @@ In order to implement a new model only a few of the included files have to be ch
 And for the GUI version:
 
 - `draw_gui.jl` to display the model
-- `run_cmdl.jl` for model-specific graphs
+- `run_gui.jl` for model-specific graphs
 
 
 ## Remarks
@@ -44,6 +44,8 @@ Run as `julia run_gui.jl` or `julia run_cmdl.jl`. Run with `--help` to see comma
 
 In order to run the model the following packages have to be installed:
 
+MiniEvents (not registered yet, for now install as `add https://github.com/mhinsch/MiniEvents.jl`)
+
 DataStructures
 
 Distributions
@@ -57,3 +59,4 @@ MacroTools
 StaticArrays
 
 SimpleDirectMediaLayer (for GUI only)
+
