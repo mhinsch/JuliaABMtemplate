@@ -19,9 +19,7 @@
 
 using Random
 
-using SimpleAgentEvents
-using SimpleAgentEvents.Scheduler
-
+using MiniEvents
 
 
 ### declare agent type(s)
@@ -57,40 +55,47 @@ Model(i, r, u, m) = Model(i, r, u, m, [])
 
 ### event-based: declare simulation processes
 
-@processes SIRm model person::Person begin
-    @poisson(model.inf * count(p -> p.status == infected, person.contacts)) ~
+@events person::Person begin
+	@debug
+    @rate(@sim().model.inf * count(p -> p.status == infected, person.contacts)) ~
         person.status == susceptible        => 
             begin
+				println(@sim().model.inf * count(p -> p.status == infected, person.contacts))
                 person.status = infected
-                [person; person.contacts]
+                @r person person.contacts
             end
 
-    @poisson(model.rec)  ~
+    @rate(@sim().model.rec)  ~
         person.status == infected           => 
             begin
                 person.status = susceptible
-                [person; person.contacts]
+                @r person person.contacts
             end
 
-    @poisson(model.imm)  ~
+    @rate(@sim().model.imm)  ~
         person.status == infected           => 
             begin
                 person.status = immune
-                person.contacts
+                @r person person.contacts
             end
     
-    @poisson(model.mort)  ~
+    @rate(@sim().model.mort)  ~
         person.status == infected           => 
             begin
                 person.status = dead
-                person.contacts
+                @r person person.contacts
             end    
 end
 
 
-function init_events(model)
-    for person in model.pop
-        SIRm.spawn(person, model)
+@simulation SIRm Person begin
+	model :: Model
+end
+
+
+function init_events(sim)
+    for person in sim.model.pop
+        spawn!(person, sim)
     end
 end
 

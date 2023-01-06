@@ -22,13 +22,14 @@ include("setup.jl")
 ### run simulation with given setup and parameters
 
 
-function run_events(model, t_stop, logfile)
+function run_events(sim, t_stop, logfile)
+	model = sim.model
 	t = 1.0
 	step = 1.0
 	last = 0
 
 	while t_stop <= 0 || t < t_stop
-		SIRm.upto!(t) # run internal scheduler up to the next time step
+		step_until!(sim, t) # run internal scheduler up to the next time step
 		
 		# we want the analysis to happen at every integral time step
 		if (now = trunc(Int, t)) >= last
@@ -106,7 +107,7 @@ const p = @create_from_args(args, Params)
 
 ## setup
 
-const model = setup(p, args[:rand_seed])
+const sim = setup(p, args[:rand_seed])
 
 const logf = prepare_outfiles("log_file.txt")
 
@@ -115,10 +116,10 @@ const logf = prepare_outfiles("log_file.txt")
 ## run
 
 if args[:step_wise]
-	@time run_steps(model, trunc(Int, args[:stop_time]), logf, args[:shuffle])
+	@time run_steps(sim, trunc(Int, args[:stop_time]), logf, args[:shuffle])
 else
-	init_events(model)
-	@time run_events(model, args[:stop_time], logf)
+	init_events(sim)
+	@time run_events(sim, args[:stop_time], logf)
 end
 
 

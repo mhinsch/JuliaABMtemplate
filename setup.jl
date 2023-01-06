@@ -42,7 +42,7 @@ function setup(par, seed)
 		rand(model.pop).status = infected
 	end
 
-	model
+	SIRm(model)
 end
 
 

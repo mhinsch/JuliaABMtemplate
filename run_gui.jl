@@ -26,7 +26,8 @@ include("draw_gui.jl")
 
 ### run simulation with given setup and parameters
 
-function run(model, gui, graphs, t_stop, logfile, max_step = 1.0)
+function run(sim, gui, graphs, t_stop, logfile, max_step = 1.0)
+	model = sim.model
 	t = 1.0
 	step = max_step
 	last = 0
@@ -41,7 +42,7 @@ function run(model, gui, graphs, t_stop, logfile, max_step = 1.0)
 		end
 
 		t1 = time()
-		SIRm.upto!(t) # run internal scheduler up to the next time step
+		step_until!(sim, t) # run internal scheduler up to the next time step
 		
 		# we want the analysis to happen at every integral time step
 		if (now = trunc(Int, t)) >= last
