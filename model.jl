@@ -60,7 +60,6 @@ Model(i, r, u, m) = Model(i, r, u, m, [])
     @rate(@sim().model.inf * count(p -> p.status == infected, person.contacts)) ~
         person.status == susceptible        => 
             begin
-				println(@sim().model.inf * count(p -> p.status == infected, person.contacts))
                 person.status = infected
                 @r person person.contacts
             end

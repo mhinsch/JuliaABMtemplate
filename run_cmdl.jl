@@ -36,7 +36,8 @@ function run_events(sim, t_stop, logfile)
 			# in case we skipped a step (shouldn't happen, but just in case...)
 			for i in last:now
 				# print all stats to file
-				print_stats_stat_log(logfile, model)
+				data = observe(Data, model, now)
+				log_results(logfile, data)
 			end
 			# remember when we did the last data output
 			last = now
@@ -49,11 +50,13 @@ function run_events(sim, t_stop, logfile)
 end
 
 
-function run_steps(model, t_stop, logfile, ord)
+function run_steps(sim, t_stop, logfile, ord)
+	model = sim.model
 	for t in 1:t_stop
 		update_model!(model, ord)
 		# print all stats to file
-		print_stats_stat_log(logfile, model)
+		data = observe(Data, model, t)
+		log_results(logfile, data)
 	end
 end
 

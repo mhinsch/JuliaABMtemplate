@@ -49,7 +49,7 @@ end
 
 function prepare_outfiles(fname)
 	logfile = open(fname, "w")
-	print_header_stat_log(logfile)
+	print_header(logfile, Data)
 	logfile
 end
 
