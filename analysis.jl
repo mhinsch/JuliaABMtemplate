@@ -26,23 +26,22 @@ const MV = MeanVarAcc{Float64}		# mean, variance
 const MM = MaxMinAcc{Float64}	# min, max
 const I = Iterators
 
-
 ### declare analysis
 # this generates a type Data to hold the results
 # and overloads the functions observe, print_header and 
 # log_results for that type
 
-@observe Data model t_now begin
+@observe Data model begin
 	@record "time" t_now
 
-	@for a in model.pop begin
-		@stat("susceptible", CountAcc) <| (a.status == susceptible)
-		@stat("infected", 	CountAcc) <| (a.status == infected)
-		@stat("immune", 	CountAcc) <| (a.status == immune)
-		@stat("dead", 		CountAcc) <| (a.status == dead)
+	for a in model.pop 
+		@stat("n_susceptible", 	CountAcc) <| (a.status == susceptible)
+		@stat("n_infected", 	CountAcc) <| (a.status == infected)
+		@stat("n_immune", 		CountAcc) <| (a.status == immune)
+		@stat("n_dead", 		CountAcc) <| (a.status == dead)
 	end
 
-	@for a in I.filter(ag->ag.status==infected, model.pop) begin
+	for a in I.filter(ag->ag.status==infected, model.pop) 
 		@stat("inf_contacts", MV, MM) <| Float64(length(a.contacts))
 		@stat("inf_periph", MV, MM) <| sqrt((a.x-0.5)^2 + (a.y-0.5)^2)
 	end

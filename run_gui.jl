@@ -48,6 +48,7 @@ function run(sim, gui, graphs, t_stop, logfile, max_step = 1.0)
 		if (now = trunc(Int, t)) >= last
 			# in case we skipped a step (shouldn't happen, but just in case...)
 			for i in last:now
+				data = observe(Data, model)
 				# print all stats to file
 				data = observe(Data, model, i)
 				log_results(logfile, data)
