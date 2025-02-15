@@ -48,15 +48,14 @@ function run(sim, gui, graphs, t_stop, logfile, max_step = 1.0)
 		if (now = trunc(Int, t)) >= last
 			# in case we skipped a step (shouldn't happen, but just in case...)
 			for i in last:now
-				data = observe(Data, model)
 				# print all stats to file
-				data = observe(Data, model, i)
+				data = observe(Data, model, now)
 				log_results(logfile, data)
 				# we can just reuse the observation results
-				add_value!(graphs[1], data.susceptible.n)
-				add_value!(graphs[2], data.infected.n)
-				add_value!(graphs[3], data.immune.n)
-				add_value!(graphs[4], data.dead.n)
+				add_value!(graphs[1], data.n_susceptible.n)
+				add_value!(graphs[2], data.n_infected.n)
+				add_value!(graphs[3], data.n_immune.n)
+				add_value!(graphs[4], data.n_dead.n)
 			end
 			# remember when we did the last data output
 			last = now

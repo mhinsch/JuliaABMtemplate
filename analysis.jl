@@ -31,7 +31,7 @@ const I = Iterators
 # and overloads the functions observe, print_header and 
 # log_results for that type
 
-@observe Data model begin
+@observe Data model t_now begin
 	@record "time" t_now
 
 	for a in model.pop 
