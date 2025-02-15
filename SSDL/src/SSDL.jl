@@ -79,7 +79,7 @@ function linePat(canvas::Canvas, x1::Int, y1::Int, x2::Int, y2::Int, on, off, co
 end
 
 function circle(canvas::Canvas, x::Int, y::Int, r::Int, col::UInt32, clip = false)
-	bresenham_circle(x, y, r, clip, 1, 1, canvas.xsize, canvas.ysize) do x, y
+	bresenham_circle(x, y, r, false, clip, 1, 1, canvas.xsize, canvas.ysize) do x, y
 		put(canvas, x, y, col)
 	end
 end
@@ -178,48 +178,37 @@ end
 
 
 function bresenham_circle_apply(f, xc, yc, x, y)
-	f(xc+x, yc+y)
-	f(xc-x, yc+y)
-	f(xc+x, yc-y)
-	f(xc-x, yc-y)
-	f(xc+y, yc+x)
-	f(xc-y, yc+x)
-	f(xc+y, yc-x)
-	f(xc-y, yc-x)
+	xlims = (-x, x); ylims = (-y, y)
+
+	for dx in xlims, dy in ylims
+		f(xc+dx, yc+dy)
+	end
+	
+	for dx in ylims, dy in xlims
+		f(xc+dx, yc+dy)
+	end
 end
 
 function bresenham_circle_clip_apply(f, xc, yc, x, y, clipx1, clipy1, clipx2, clipy2)
-	if clipy1 <= yc-y <= clipy2
+	for dy in (yc-y, yc+y)
+		clipy1 <= dy <= clipy2 || continue
+		
 		if clipx1 <= xc-x <= clipx2
-			f(xc-x, yc-y)
+			f(xc-x, dy)
 		end
 		if clipx1 <= xc+x <= clipx2
-			f(xc+x, yc-y)
-		end
-	end
-	if clipy1 <= yc+y <= clipy2
-		if clipx1 <= xc-x <= clipx2
-			f(xc+x, yc+y)
-		end
-		if clipx1 <= xc+x <= clipx2
-			f(xc-x, yc+y)
+			f(xc+x, dy)
 		end
 	end
 
-	if clipy1 <= yc-x <= clipy2
-		if clipx1 <= xc+y <= clipx2
-			f(xc+y, yc-x)
-		end
+	for dy in (yc-x, yc+x)
+		clipy1 <= dy <= clipy2 || continue
+		
 		if clipx1 <= xc-y <= clipx2
-			f(xc-y, yc-x)
+			f(xc-y, dy)
 		end
-	end
-	if clipy1 <= yc+x <= clipy2
 		if clipx1 <= xc+y <= clipx2
-			f(xc+y, yc+x)
-		end
-		if clipx1 <= xc-y <= clipx2
-			f(xc-y, yc+x)
+			f(xc+y, dy)
 		end
 	end
 end
@@ -264,7 +253,7 @@ function bresenham_circle_fill_clip_apply(f, xc, yc, x, y, clipx1, clipy1, clipx
 end
 
 function bresenham_circle(f::Function, xc::Int, yc::Int, r::Int, filled = false, 
-	clip = false, x1=0, x2=0, y1=0, y2=0)
+	clip = false, x1=0, y1=0, x2=0, y2=0)
  
 	# don't use costly clip if circle is within bounds
 	if clip && 
@@ -279,7 +268,7 @@ function bresenham_circle(f::Function, xc::Int, yc::Int, r::Int, filled = false,
 
 	if filled
 		if clip
-			bresenham_circle_fill_clip_apply(f, xc, yc, x, y, x1, x2, y1, y2)
+			bresenham_circle_fill_clip_apply(f, xc, yc, x, y, x1, y1, x2, y2)
 		else
 			bresenham_circle_fill_apply(f, xc, yc, x, y)
 		end
@@ -303,7 +292,7 @@ function bresenham_circle(f::Function, xc::Int, yc::Int, r::Int, filled = false,
 
 		if filled
 			if clip
-				bresenham_circle_fill_clip_apply(f, xc, yc, x, y, x1, x2, y1, y2)
+				bresenham_circle_fill_clip_apply(f, xc, yc, x, y, x1, y1, x2, y2)
 			else
 				bresenham_circle_fill_apply(f, xc, yc, x, y)
 			end
