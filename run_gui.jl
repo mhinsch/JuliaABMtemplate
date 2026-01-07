@@ -38,42 +38,41 @@ function run(sim, gui, graphs, t_stop, logfile, max_step = 1.0)
 		# don't do anything if we are in pause mode
 		if pause
 			sleep(0.03)
-			continue
-		end
-
-		t1 = time()
-		step_until!(sim, t) # run internal scheduler up to the next time step
+		else
+			t1 = time()
+			step_until!(sim, t) # run internal scheduler up to the next time step
 		
-		# we want the analysis to happen at every integral time step
-		if (now = trunc(Int, t)) >= last
-			# in case we skipped a step (shouldn't happen, but just in case...)
-			for i in last:now
-				# print all stats to file
-				data = observe(Data, model, now)
-				log_results(logfile, data)
-				# we can just reuse the observation results
-				add_value!(graphs[1], data.n_susceptible.n)
-				add_value!(graphs[2], data.n_infected.n)
-				add_value!(graphs[3], data.n_immune.n)
-				add_value!(graphs[4], data.n_dead.n)
+			# we want the analysis to happen at every integral time step
+			if (now = trunc(Int, t)) >= last
+				# in case we skipped a step (shouldn't happen, but just in case...)
+				for i in last:now
+					# print all stats to file
+					data = observe(Data, model, now)
+					log_results(logfile, data)
+					# we can just reuse the observation results
+					add_value!(graphs[1], data.n_susceptible.n)
+					add_value!(graphs[2], data.n_infected.n)
+					add_value!(graphs[3], data.n_immune.n)
+					add_value!(graphs[4], data.n_dead.n)
+				end
+				# remember when we did the last data output
+				last = now
 			end
-			# remember when we did the last data output
-			last = now
+
+			t += step
+
+			# measure (real-world) time it took to simulate one step
+			dt = time() - t1
+
+			# adjust simulation step size
+			if dt > 0.1
+				step /= 1.1
+			elseif dt < 0.03 && step < max_step # this is a simple model, so let's limit
+				step *= 1.1                # max step size to about 1
+			end
+
+			println(t)
 		end
-
-		t += step
-
-		# measure (real-world) time it took to simulate one step
-		dt = time() - t1
-
-		# adjust simulation step size
-		if dt > 0.1
-			step /= 1.1
-		elseif dt < 0.03 && step < max_step # this is a simple model, so let's limit
-			step *= 1.1                # max step size to about 1
-		end
-
-		println(t)
 
 		# end simulation if requested number of steps has been run
 		if t_stop > 0 && t >= t_stop
@@ -175,4 +174,4 @@ run(model, gui, graphs, args[:stop_time], logf, args[:max_step])
 
 close(logf)
 
-SDL2.Quit()
+SDL_Quit()
