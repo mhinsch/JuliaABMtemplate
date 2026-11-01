@@ -61,12 +61,13 @@ end
 
 # draw both panels to video memory
 function draw(model, graphs, gui)
-	clear!(gui.canvas)
-	draw_world(gui.canvas, model)
-	update!(gui.panels[1,1], gui.canvas)
+	bg = rgb(100, 100, 100)
+	redraw_at!(gui, 1, bg) do canvas
+		draw_world(canvas, model)
+	end
 
-	clear!(gui.canvas)
-	draw_graph(gui.canvas, graphs)
-	update!(gui.panels[2, 1], gui.canvas)
+	redraw_at!(gui, 2, bg) do canvas
+		draw_graph(canvas, graphs)
+	end
 end
 

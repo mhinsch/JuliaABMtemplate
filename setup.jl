@@ -17,7 +17,8 @@
 
 ### include all the other pieces of code
 
-push!(LOAD_PATH, pwd()) # let Julia find local packages
+#push!(LOAD_PATH, pwd()) # let Julia find local packages
+push!(LOAD_PATH, pwd() * "/lib") # let Julia find local packages
 
 include("model.jl")
 include("setup_world.jl")

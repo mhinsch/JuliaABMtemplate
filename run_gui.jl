@@ -108,9 +108,7 @@ function run(sim, gui, graphs, t_stop, logfile, max_step = 1.0)
 end
 
 
-
 ### setup, run, cleanup
-
 
 
 ## parameters
@@ -158,8 +156,12 @@ const model = setup(p, args[:rand_seed])
 const logf = prepare_outfiles("log_file.txt")
 
 # two 640x640 panels next to each other
-const gui = setup_Gui("SIRSm", 640, 640, 2, 1)
-const graphs = [Graph{Int}(green(255)), Graph{Int}(red(255)), Graph{Int}(blue(255)), Graph{Int}(WHITE)] 
+const gui = setup_Gui("SIRSm", 2000, 1000, (1, 1), (2, 1))
+const graphs = [
+	Graph{Int}(green(255), ""),
+	Graph{Int}(red(255), ""),
+	Graph{Int}(blue(255), ""),
+	Graph{Int}(WHITE, "")] 
 
 
 
